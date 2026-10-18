@@ -1045,16 +1045,6 @@ body {
   color: #fff;
 }
 
-.mute-badge {
-  background: rgba(244, 63, 94, 0.15);
-  color: #fb7185;
-}
-
-.audio-opt.selected .audio-badge-pill.mute-badge {
-  background: #f43f5e;
-  color: #fff;
-}
-
 .audio-icon-slot {
   display: inline-flex;
   align-items: center;
@@ -1070,20 +1060,10 @@ body {
   color: var(--accent-primary);
 }
 
-.audio-opt.selected[data-audio="without"] {
-  border-color: #f43f5e;
-  box-shadow: 0 0 16px rgba(244, 63, 94, 0.28), inset 0 0 0 1px #f43f5e;
-  background: rgba(244, 63, 94, 0.08);
-}
-
-.audio-opt.selected[data-audio="without"] .audio-icon-slot {
-  color: #fb7185;
-}
-
-.audio-opt.selected[data-audio="without"] .radio-indicator {
-  background: #f43f5e;
-  border-color: #f43f5e;
-  box-shadow: 0 0 8px #f43f5e;
+.audio-opt.selected .radio-indicator {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-primary);
 }
 
 .audio-main {
