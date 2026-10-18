@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Hash - Premium local video downloader for Instagram, YouTube, Facebook, and Pinterest. High quality, private, and fast.">
+  <meta name="theme-color" content="#0b0f19">
+  <title>Hash — Studio Video Downloader</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="static/style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M10 16h12M16 10v12' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="ambient-glow glow-1" aria-hidden="true"></div>
+  <div class="ambient-glow glow-2" aria-hidden="true"></div>
+  <div class="ambient-grid" aria-hidden="true"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#" aria-label="Hash Home">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="9" x2="20" y2="9"></line>
+            <line x1="4" y1="15" x2="20" y2="15"></line>
+            <line x1="10" y1="3" x2="8" y2="21"></line>
+            <line x1="16" y1="3" x2="14" y2="21"></line>
+          </svg>
+        </div>
+        <span class="brand-text">Hash<span class="brand-badge">STUDIO</span></span>
+      </a>
+
+      <div class="topbar-actions">
+        <div class="server-status" title="Local Python backend connected">
+          <span class="status-pulse"></span>
+          <span class="status-label">Local Host Ready</span>
+        </div>
+
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle light or dark theme" title="Toggle theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-chip">
+        <span class="chip-sparkle">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.4 8.6L21 11L14.4 13.4L12 20L9.6 13.4L3 11L9.6 8.6L12 2Z"/></svg>
+        </span>
+        <span class="chip-text">Fast • Private • Original Quality</span>
+      </div>
+
+      <h1 class="hero-title">
+        Download videos with<br>
+        <span class="text-gradient">zero compression.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Paste any Instagram Reel, YouTube Video, Facebook Watch clip, or Pinterest pin. Experience crystal-clear downloads up to 2K.
+      </p>
+
+      <!-- URL Input Capsule -->
+      <div class="form-container">
+        <form id="url-form" class="url-form" novalidate>
+          <div class="input-icon-slot">
+            <svg class="link-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </div>
+
+          <input
+            id="url"
+            type="url"
+            value="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+            placeholder="Paste Instagram, YouTube, Facebook, or Pinterest link…"
+            required
+            autocomplete="off"
+            spellcheck="false"
+          >
+
+          <button type="button" id="clear-btn" class="input-action-btn" title="Clear input" aria-label="Clear">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          <button type="button" id="paste-btn" class="paste-btn" title="Paste from clipboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            </svg>
+            <span>Paste</span>
+          </button>
+
+          <button id="fetch-btn" type="submit" class="fetch-btn">
+            <span class="btn-text">Fetch video</span>
+            <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+            <span class="spinner hidden" aria-hidden="true"></span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Supported Platforms Badges -->
+      <div class="platforms" id="platform-tags">
+        <div class="platform-badge" data-platform="instagram">
+          <svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+          <span>Instagram Reels</span>
+        </div>
+
+        <div class="platform-badge active-platform" data-platform="youtube">
+          <svg class="platform-icon yt-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+          <span>YouTube / Shorts</span>
+        </div>
+
+        <div class="platform-badge" data-platform="facebook">
+          <svg class="platform-icon fb-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+          <span>Facebook Watch</span>
+        </div>
+
+        <div class="platform-badge" data-platform="pinterest">
+          <svg class="platform-icon pin-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0a12 12 0 0 0-4.37 23.18c-.05-.98-.09-2.5.02-3.58l.78-3.32s-.2-.4-.2-.98c0-.92.53-1.6 1.2-1.6.56 0 .84.42.84.93 0 .57-.36 1.42-.55 2.21-.16.66.33 1.2 1 1.2 1.2 0 2.12-1.27 2.12-3.1 0-1.62-1.16-2.75-2.83-2.75-2.07 0-3.28 1.55-3.28 3.15 0 .62.24 1.29.54 1.66.06.07.07.13.05.2l-.2 0.84c-.03.14-.11.17-.26.1-1-.46-1.62-1.9-1.62-3.07 0-2.5 1.82-4.8 5.24-4.8 2.76 0 4.9 1.97 4.9 4.6 0 2.74-1.73 4.95-4.13 4.95-.81 0-1.57-.42-1.83-.92l-.5 1.9c-.18.7-.67 1.57-1 2.1A12 12 0 1 0 12 0z"/>
+          </svg>
+          <span>Pinterest</span>
+        </div>
+      </div>
+
+      <p class="hero-disclaimer">
+        Runs 100% locally on your machine. Private, fast, DRM-compliant.
+      </p>
+    </section>
+
+    <!-- Status / Error Notification Box -->
+    <section id="status" class="status" role="status" aria-live="polite">
+      <div class="status-content">
+        <span class="status-icon"></span>
+        <span class="status-message"></span>
+      </div>
+    </section>
+
+    <!-- Sample Result Card for Visual Preview -->
+    <section id="result" class="result-card">
+      <div class="result-card-inner">
+        <!-- Thumbnail Section -->
+        <div class="preview-wrapper">
+          <div class="preview-media">
+            <img id="thumbnail" alt="Video thumbnail preview" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80">
+            <div class="preview-overlay">
+              <span class="play-hint">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              </span>
+            </div>
+          </div>
+          <div class="media-badges">
+            <span class="duration-badge" id="duration">3:32</span>
+            <span class="platform-chip" id="platform-chip">YouTube</span>
+          </div>
+        </div>
+
+        <!-- Details & Actions Section -->
+        <div class="details-wrapper">
+          <div class="result-meta-top">
+            <span class="live-tag">
+              <span class="dot-blink"></span> READY TO DOWNLOAD
+            </span>
+            <button id="copy-link-btn" class="text-action-btn" title="Copy video link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy Link</span>
+            </button>
+          </div>
+
+          <h2 id="title" class="video-title">Rick Astley - Never Gonna Give You Up (Official Music Video)</h2>
+          <p id="source" class="video-source">YouTube · Verified Stream Available</p>
+
+          <!-- Quality Selection -->
+          <div class="quality-section">
+            <div class="quality-label-row">
+              <span class="quality-heading">Select Output Quality</span>
+              <span class="quality-subtext">Automatic stream selection</span>
+            </div>
+
+            <div class="quality-grid">
+              <button class="quality selected" data-quality="best" type="button">
+                <div class="quality-badge-pill">MAX</div>
+                <div class="quality-main">Original</div>
+                <div class="quality-sub">Highest bitrate</div>
+                <div class="radio-indicator"></div>
+              </button>
+
+              <button class="quality" data-quality="1080" type="button">
+                <div class="quality-badge-pill">FHD</div>
+                <div class="quality-main">1080p</div>
+                <div class="quality-sub">High Definition</div>
+                <div class="radio-indicator"></div>
+              </button>
+
+              <button class="quality" data-quality="720" type="button">
+                <div class="quality-badge-pill">HD</div>
+                <div class="quality-main">720p</div>
+                <div class="quality-sub">Standard HD</div>
+                <div class="radio-indicator"></div>
+              </button>
+
+              <button class="quality" data-quality="1440" type="button">
+                <div class="quality-badge-pill upscale-badge">AI 2K</div>
+                <div class="quality-main">1440p</div>
+                <div class="quality-sub">Lanczos Scaled</div>
+                <div class="radio-indicator"></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Download Action -->
+          <div class="action-footer">
+            <button id="download-btn" class="download-btn" type="button">
+              <span class="dl-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </span>
+              <span class="dl-text">Download Video</span>
+              <span class="dl-spinner hidden" aria-hidden="true"></span>
+            </button>
+            <p class="quality-help">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>Merged in MP4 format. 2K mode applies high-grade lanczos upscaling via FFmpeg.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Downloads History Section -->
+    <section id="history-section" class="history-section">
+      <div class="history-header">
+        <div class="history-title-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <h3>Recent Session Downloads</h3>
+        </div>
+        <button id="clear-history-btn" class="text-action-btn" type="button">Clear history</button>
+      </div>
+      <div id="history-list" class="history-list">
+        <div class="history-item">
+          <div class="history-item-left">
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=100&q=80" class="history-thumb" alt="Thumb">
+            <div class="history-info">
+              <div class="history-title">Nature Cinematic Reel 4K - Mountain Drone Shot</div>
+              <div class="history-meta">
+                <span class="history-tag">Instagram Reels</span>
+                <span>• Quality: 1080P</span>
+                <span>• 10:24 PM</span>
+              </div>
+            </div>
+          </div>
+          <button class="history-action-btn" type="button">Load</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features & Workflow Section -->
+    <section class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+          </svg>
+        </div>
+        <h4>01 · Auto Detection</h4>
+        <p>Instantly extracts audio and video streams from reels, shorts, and feeds with automated parser.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <h4>02 · Multi-Resolution</h4>
+        <p>Select the optimal format for your project — from mobile-ready 720p to crisp 1080p and 2K.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h4>03 · Local & Private</h4>
+        <p>Everything runs on your own system. No tracking, zero third-party telemetry, no cloud storage.</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">Hash Studio</span>
+          <span class="footer-dot">•</span>
+          <span>Personal Video Utility</span>
+        </div>
+        <div class="footer-right">
+          <span>Runs locally on your computer. Respect copyright and platform terms.</span>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+  <script src="static/app.js"></script>
+</body>
+</html>

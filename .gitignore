@@ -1,0 +1,34 @@
+# Video downloads & temporary processing files
+downloads/*
+!downloads/.gitkeep
+downloads/
+download/
+*.mp4
+*.webm
+*.mkv
+*.m4a
+*.part
+*.ytdl
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Python virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# OS-generated files
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# IDE & Editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
