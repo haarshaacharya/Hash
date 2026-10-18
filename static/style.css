@@ -963,6 +963,145 @@ body {
   box-shadow: 0 0 8px var(--accent-primary);
 }
 
+/* ==========================================================================
+   AUDIO TRACK SELECTOR
+   ========================================================================== */
+
+.audio-section {
+  margin-bottom: 20px;
+}
+
+.audio-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.audio-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.audio-subtext {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.audio-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.audio-opt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  overflow: hidden;
+}
+
+.audio-opt:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-tertiary);
+  transform: translateY(-2px);
+}
+
+.audio-opt.selected {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.28), inset 0 0 0 1px var(--accent-primary);
+}
+
+.audio-opt-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.audio-badge-pill {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--border-subtle);
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.audio-opt.selected .audio-badge-pill {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.mute-badge {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+}
+
+.audio-opt.selected .audio-badge-pill.mute-badge {
+  background: #f43f5e;
+  color: #fff;
+}
+
+.audio-icon-slot {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.audio-icon-slot svg {
+  width: 14px;
+  height: 14px;
+}
+
+.audio-opt.selected .audio-icon-slot {
+  color: var(--accent-primary);
+}
+
+.audio-opt.selected[data-audio="without"] {
+  border-color: #f43f5e;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.28), inset 0 0 0 1px #f43f5e;
+  background: rgba(244, 63, 94, 0.08);
+}
+
+.audio-opt.selected[data-audio="without"] .audio-icon-slot {
+  color: #fb7185;
+}
+
+.audio-opt.selected[data-audio="without"] .radio-indicator {
+  background: #f43f5e;
+  border-color: #f43f5e;
+  box-shadow: 0 0 8px #f43f5e;
+}
+
+.audio-main {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.audio-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.audio-opt.selected .audio-sub {
+  color: var(--text-secondary);
+}
+
 /* Download CTA Button */
 .action-footer {
   margin-top: auto;
@@ -1331,3 +1470,10 @@ body {
     text-align: center;
   }
 }
+
+@media (max-width: 500px) {
+  .audio-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

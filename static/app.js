@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const videoTitle = document.querySelector("#title");
   const videoSource = document.querySelector("#source");
   const qualityButtons = document.querySelectorAll(".quality");
+  const audioButtons = document.querySelectorAll(".audio-opt");
   const downloadBtn = document.querySelector("#download-btn");
   const copyLinkBtn = document.querySelector("#copy-link-btn");
   
@@ -35,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- State Variables ---
   let selectedQuality = "best";
+  let selectedAudio = "with";
   let currentUrl = "";
   let currentVideoData = null;
 
@@ -251,6 +253,14 @@ document.addEventListener("DOMContentLoaded", () => {
         b.classList.toggle("selected", b.dataset.quality === selectedQuality);
       });
 
+      // Default to "with" sound
+      selectedAudio = "with";
+      audioButtons.forEach(b => {
+        b.classList.toggle("selected", b.dataset.audio === "with");
+      });
+      const dlInitialText = downloadBtn?.querySelector(".dl-text");
+      if (dlInitialText) dlInitialText.textContent = "Download Video";
+
       clearStatus();
       resultBox.classList.remove("hidden");
       resultBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -280,6 +290,26 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================================================================
+  // AUDIO SELECTION (WITH SOUND / WITHOUT SOUND)
+  // ==========================================================================
+  audioButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedAudio = btn.dataset.audio || "with";
+      audioButtons.forEach(b => b.classList.toggle("selected", b === btn));
+      clearStatus();
+
+      const dlText = downloadBtn?.querySelector(".dl-text");
+      if (selectedAudio === "without") {
+        showToast("Audio set to: Without Sound (Muted)");
+        if (dlText) dlText.textContent = "Download Video (No Sound)";
+      } else {
+        showToast("Audio set to: With Sound (Original Audio)");
+        if (dlText) dlText.textContent = "Download Video";
+      }
+    });
+  });
+
+  // ==========================================================================
   // DOWNLOAD EXECUTION
   // ==========================================================================
   downloadBtn.addEventListener("click", async () => {
@@ -294,13 +324,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (dlIcon) dlIcon.classList.add("hidden");
     if (dlSpinner) dlSpinner.classList.remove("hidden");
 
-    setStatus("Downloading and packaging video file. Please keep this tab open…", "loading");
+    if (selectedAudio === "without") {
+      setStatus("Downloading and generating silent video (no sound). Please keep this tab open…", "loading");
+    } else {
+      setStatus("Downloading and packaging video file with audio. Please keep this tab open…", "loading");
+    }
 
     try {
       const response = await fetch("/api/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: currentUrl, quality: selectedQuality })
+        body: JSON.stringify({
+          url: currentUrl,
+          quality: selectedQuality,
+          audio: selectedAudio
+        })
       });
 
       if (!response.ok) {
@@ -315,7 +353,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition") || "";
       const match = disposition.match(/filename="?([^";]+)"?/i);
-      const filename = match ? match[1] : `video_${selectedQuality}.mp4`;
+      const defaultFilename = selectedAudio === "without"
+        ? `video_${selectedQuality}_no_sound.mp4`
+        : `video_${selectedQuality}.mp4`;
+      const filename = match ? match[1] : defaultFilename;
 
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -326,8 +367,9 @@ document.addEventListener("DOMContentLoaded", () => {
       a.remove();
       URL.revokeObjectURL(objectUrl);
 
-      setStatus(`Download complete! Saved as "${filename}". Check your browser downloads.`, "success");
-      showToast("Download completed successfully!");
+      const successLabel = selectedAudio === "without" ? "Saved without sound" : "Saved with sound";
+      setStatus(`Download complete! ${successLabel} as "${filename}". Check your browser downloads.`, "success");
+      showToast(selectedAudio === "without" ? "Downloaded without sound!" : "Download completed successfully!");
 
       // Save to Session History
       if (currentVideoData) {
@@ -336,6 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
           url: currentUrl,
           thumbnail: currentVideoData.thumbnail || "",
           quality: selectedQuality,
+          audio: selectedAudio,
           platform: currentVideoData.platform || "Video",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
@@ -345,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setStatus(err.message || "Failed to download video file.", "error");
     } finally {
       downloadBtn.disabled = false;
-      if (dlText) dlText.textContent = "Download Video";
+      if (dlText) dlText.textContent = selectedAudio === "without" ? "Download Video (No Sound)" : "Download Video";
       if (dlIcon) dlIcon.classList.remove("hidden");
       if (dlSpinner) dlSpinner.classList.add("hidden");
     }
@@ -388,7 +431,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="history-title" title="${item.title}">${item.title}</div>
             <div class="history-meta">
               <span class="history-tag">${item.platform}</span>
-              <span>• Quality: ${item.quality.toUpperCase()}</span>
+              <span>• ${item.quality.toUpperCase()}</span>
+              <span>• ${item.audio === "without" ? "🔇 Muted" : "🔊 With Sound"}</span>
               <span>• ${item.timestamp}</span>
             </div>
           </div>
