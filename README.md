@@ -34,15 +34,3 @@ A modern, high-performance personal video and MP3 audio downloader with a Flask 
    python app.py
    ```
 5. Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.
-
-## Run on macOS/Linux
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python app.py
-```
-Then open [http://127.0.0.1:5000](http://127.0.0.1:5000).
-
-## Offline UI Preview
-You can directly open `preview.html` in any browser to inspect the complete front-end design without starting the Python server.
