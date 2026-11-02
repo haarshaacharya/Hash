@@ -208,82 +208,182 @@
           <h2 id="title" class="video-title">Rick Astley - Never Gonna Give You Up (Official Music Video)</h2>
           <p id="source" class="video-source">YouTube · Verified Stream Available</p>
 
-          <!-- Quality Selection -->
-          <div class="quality-section">
-            <div class="quality-label-row">
-              <span class="quality-heading">Select Output Quality</span>
-              <span class="quality-subtext">Automatic stream selection</span>
+          <!-- Format Selection (MP4 Video vs MP3 Audio) -->
+          <div class="format-section">
+            <div class="format-label-row">
+              <span class="format-heading">Select Media Format</span>
+              <span class="format-subtext">Choose video or pure audio</span>
             </div>
 
-            <div class="quality-grid">
-              <button class="quality selected" data-quality="best" type="button">
-                <div class="quality-badge-pill">MAX</div>
-                <div class="quality-main">Original</div>
-                <div class="quality-sub">Highest bitrate</div>
+            <div class="format-grid">
+              <button class="format-opt selected" data-format="mp4" type="button" aria-label="Download MP4 Video">
+                <div class="format-opt-top">
+                  <span class="format-badge-pill">VIDEO</span>
+                  <div class="format-icon-slot" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+                      <polygon points="10 9 16 12 10 15 10 9"></polygon>
+                    </svg>
+                  </div>
+                </div>
+                <div class="format-main">MP4 Video</div>
+                <div class="format-sub">Original, 1080p, 720p or 2K</div>
                 <div class="radio-indicator"></div>
               </button>
 
-              <button class="quality" data-quality="1080" type="button">
-                <div class="quality-badge-pill">FHD</div>
-                <div class="quality-main">1080p</div>
-                <div class="quality-sub">High Definition</div>
-                <div class="radio-indicator"></div>
-              </button>
-
-              <button class="quality" data-quality="720" type="button">
-                <div class="quality-badge-pill">HD</div>
-                <div class="quality-main">720p</div>
-                <div class="quality-sub">Standard HD</div>
-                <div class="radio-indicator"></div>
-              </button>
-
-              <button class="quality" data-quality="1440" type="button">
-                <div class="quality-badge-pill upscale-badge">AI 2K</div>
-                <div class="quality-main">1440p</div>
-                <div class="quality-sub">Lanczos Scaled</div>
+              <button class="format-opt" data-format="mp3" type="button" aria-label="Download MP3 Audio">
+                <div class="format-opt-top">
+                  <span class="format-badge-pill mp3-badge">AUDIO</span>
+                  <div class="format-icon-slot" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 18V5l12-2v13"></path>
+                      <circle cx="6" cy="18" r="3"></circle>
+                      <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                  </div>
+                </div>
+                <div class="format-main">MP3 Audio</div>
+                <div class="format-sub">High-bitrate music track</div>
                 <div class="radio-indicator"></div>
               </button>
             </div>
           </div>
 
-          <!-- Audio Selection (With Sound / Without Sound) -->
-          <div class="audio-section">
-            <div class="audio-label-row">
-              <span class="audio-heading">Audio Option / Sound</span>
-              <span class="audio-subtext">Original sound or mute</span>
+          <!-- Video Options Wrapper (MP4) -->
+          <div id="video-options-wrapper" class="video-options-wrapper">
+            <!-- Quality Selection -->
+            <div class="quality-section">
+              <div class="quality-label-row">
+                <span class="quality-heading">Select Output Quality</span>
+                <span class="quality-subtext">Automatic stream selection</span>
+              </div>
+
+              <div class="quality-grid">
+                <button class="quality selected" data-quality="best" type="button">
+                  <div class="quality-badge-pill">MAX</div>
+                  <div class="quality-main">Original</div>
+                  <div class="quality-sub">Highest bitrate</div>
+                  <div class="radio-indicator"></div>
+                </button>
+
+                <button class="quality" data-quality="1080" type="button">
+                  <div class="quality-badge-pill">FHD</div>
+                  <div class="quality-main">1080p</div>
+                  <div class="quality-sub">High Definition</div>
+                  <div class="radio-indicator"></div>
+                </button>
+
+                <button class="quality" data-quality="720" type="button">
+                  <div class="quality-badge-pill">HD</div>
+                  <div class="quality-main">720p</div>
+                  <div class="quality-sub">Standard HD</div>
+                  <div class="radio-indicator"></div>
+                </button>
+
+                <button class="quality" data-quality="1440" type="button">
+                  <div class="quality-badge-pill upscale-badge">AI 2K</div>
+                  <div class="quality-main">1440p</div>
+                  <div class="quality-sub">Lanczos Scaled</div>
+                  <div class="radio-indicator"></div>
+                </button>
+              </div>
             </div>
 
-            <div class="audio-grid">
-              <button class="audio-opt selected" data-audio="with" type="button" aria-label="Download with sound">
-                <div class="audio-opt-top">
-                  <div class="audio-badge-pill">WITH SOUND</div>
-                  <div class="audio-icon-slot" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                    </svg>
-                  </div>
-                </div>
-                <div class="audio-main">With Sound</div>
-                <div class="audio-sub">Reel music & audio track included</div>
-                <div class="radio-indicator"></div>
-              </button>
+            <!-- Audio Selection (With Sound / Without Sound) -->
+            <div class="audio-section">
+              <div class="audio-label-row">
+                <span class="audio-heading">Audio Option / Sound</span>
+                <span class="audio-subtext">Original sound or mute</span>
+              </div>
 
-              <button class="audio-opt" data-audio="without" type="button" aria-label="Download without sound">
-                <div class="audio-opt-top">
-                  <div class="audio-badge-pill">WITHOUT SOUND</div>
-                  <div class="audio-icon-slot" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                      <line x1="23" y1="9" x2="17" y2="15"></line>
-                      <line x1="17" y1="9" x2="23" y2="15"></line>
-                    </svg>
+              <div class="audio-grid">
+                <button class="audio-opt selected" data-audio="with" type="button" aria-label="Download with sound">
+                  <div class="audio-opt-top">
+                    <div class="audio-badge-pill">WITH SOUND</div>
+                    <div class="audio-icon-slot" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                      </svg>
+                    </div>
                   </div>
-                </div>
-                <div class="audio-main">Without Sound</div>
-                <div class="audio-sub">Muted silent video (no audio)</div>
-                <div class="radio-indicator"></div>
-              </button>
+                  <div class="audio-main">With Sound</div>
+                  <div class="audio-sub">Reel music & audio track included</div>
+                  <div class="radio-indicator"></div>
+                </button>
+
+                <button class="audio-opt" data-audio="without" type="button" aria-label="Download without sound">
+                  <div class="audio-opt-top">
+                    <div class="audio-badge-pill">WITHOUT SOUND</div>
+                    <div class="audio-icon-slot" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <line x1="23" y1="9" x2="17" y2="15"></line>
+                        <line x1="17" y1="9" x2="23" y2="15"></line>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="audio-main">Without Sound</div>
+                  <div class="audio-sub">Muted silent video (no audio)</div>
+                  <div class="radio-indicator"></div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Audio Options Wrapper (MP3) -->
+          <div id="audio-options-wrapper" class="audio-options-wrapper hidden">
+            <!-- MP3 Bitrate Selection -->
+            <div class="quality-section">
+              <div class="quality-label-row">
+                <span class="quality-heading">Select MP3 Audio Quality</span>
+                <span class="quality-subtext">Higher bitrate = pristine acoustic clarity</span>
+              </div>
+
+              <div class="quality-grid mp3-quality-grid">
+                <button class="mp3-quality selected" data-bitrate="320" type="button">
+                  <div class="quality-badge-pill mp3-pill">MAX</div>
+                  <div class="quality-main">320 kbps</div>
+                  <div class="quality-sub">Studio Quality</div>
+                  <div class="radio-indicator"></div>
+                </button>
+
+                <button class="mp3-quality" data-bitrate="256" type="button">
+                  <div class="quality-badge-pill mp3-pill">HQ</div>
+                  <div class="quality-main">256 kbps</div>
+                  <div class="quality-sub">High Fidelity</div>
+                  <div class="radio-indicator"></div>
+                </button>
+
+                <button class="mp3-quality" data-bitrate="192" type="button">
+                  <div class="quality-badge-pill mp3-pill">STANDARD</div>
+                  <div class="quality-main">192 kbps</div>
+                  <div class="quality-sub">Standard MP3</div>
+                  <div class="radio-indicator"></div>
+                </button>
+
+                <button class="mp3-quality" data-bitrate="128" type="button">
+                  <div class="quality-badge-pill mp3-pill">COMPACT</div>
+                  <div class="quality-main">128 kbps</div>
+                  <div class="quality-sub">Lightweight File</div>
+                  <div class="radio-indicator"></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- MP3 Info Card -->
+            <div class="mp3-info-card">
+              <div class="mp3-info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 18V5l12-2v13"></path>
+                  <circle cx="6" cy="18" r="3"></circle>
+                  <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+              </div>
+              <div class="mp3-info-content">
+                <span class="mp3-info-title">Direct MP3 Audio Extraction</span>
+                <p class="mp3-info-desc">Pure audio track extracted and converted into high-bitrate MP3. Plays on iPhone, Android, car stereos, and all music players.</p>
+              </div>
             </div>
           </div>
 
@@ -291,22 +391,27 @@
           <div class="action-footer">
             <button id="download-btn" class="download-btn" type="button">
               <span class="dl-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="dl-video-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="7 10 12 15 17 10"></polyline>
                   <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <svg class="dl-audio-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 18V5l12-2v13"></path>
+                  <circle cx="6" cy="18" r="3"></circle>
+                  <circle cx="18" cy="16" r="3"></circle>
                 </svg>
               </span>
               <span class="dl-text">Download Video</span>
               <span class="dl-spinner hidden" aria-hidden="true"></span>
             </button>
-            <p class="quality-help">
+            <p class="quality-help" id="quality-help">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="16" x2="12" y2="12"></line>
                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
               </svg>
-              <span>Merged in MP4 format. Choose with or without sound. 2K mode applies high-grade lanczos upscaling.</span>
+              <span class="quality-help-text">Merged in MP4 format. Choose with or without sound. 2K mode applies high-grade lanczos upscaling.</span>
             </p>
           </div>
         </div>

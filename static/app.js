@@ -1,7 +1,8 @@
 /**
  * HASH STUDIO — FRONTEND ENGINE
  * Handles theme toggling, clipboard operations, stream inspection,
- * quality selection, download execution, and download history.
+ * media format switching (MP4 Video / MP3 Audio), quality/bitrate selection,
+ * download execution, and download history.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -23,11 +24,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const platformChip = document.querySelector("#platform-chip");
   const videoTitle = document.querySelector("#title");
   const videoSource = document.querySelector("#source");
+  
+  // Format & Options Elements
+  const formatButtons = document.querySelectorAll(".format-opt");
+  const videoOptionsWrapper = document.querySelector("#video-options-wrapper");
+  const audioOptionsWrapper = document.querySelector("#audio-options-wrapper");
   const qualityButtons = document.querySelectorAll(".quality");
   const audioButtons = document.querySelectorAll(".audio-opt");
+  const mp3QualityButtons = document.querySelectorAll(".mp3-quality");
+  
+  // CTA Elements
   const downloadBtn = document.querySelector("#download-btn");
+  const dlVideoIcon = document.querySelector(".dl-video-icon");
+  const dlAudioIcon = document.querySelector(".dl-audio-icon");
+  const qualityHelpText = document.querySelector(".quality-help-text");
   const copyLinkBtn = document.querySelector("#copy-link-btn");
   
+  // History Elements
   const historySection = document.querySelector("#history-section");
   const historyList = document.querySelector("#history-list");
   const clearHistoryBtn = document.querySelector("#clear-history-btn");
@@ -35,8 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const toastBox = document.querySelector("#toast");
 
   // --- State Variables ---
+  let selectedFormat = "mp4"; // "mp4" or "mp3"
   let selectedQuality = "best";
   let selectedAudio = "with";
+  let selectedBitrate = "320"; // "320", "256", "192", "128"
   let currentUrl = "";
   let currentVideoData = null;
 
@@ -98,6 +113,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================================================
+  // UI UPDATE HELPER (DOWNLOAD BUTTON & HELP TEXT)
+  // ==========================================================================
+  function updateActionUI() {
+    const dlText = downloadBtn?.querySelector(".dl-text");
+    if (!dlText) return;
+
+    if (selectedFormat === "mp3") {
+      downloadBtn.classList.add("mp3-mode");
+      if (dlVideoIcon) dlVideoIcon.classList.add("hidden");
+      if (dlAudioIcon) dlAudioIcon.classList.remove("hidden");
+      dlText.textContent = `Download Audio (MP3 · ${selectedBitrate} kbps)`;
+      if (qualityHelpText) {
+        qualityHelpText.textContent = `High-fidelity MP3 extraction (${selectedBitrate} kbps). Compatible with iPhone, Android, car stereos, and all music players.`;
+      }
+    } else {
+      downloadBtn.classList.remove("mp3-mode");
+      if (dlVideoIcon) dlVideoIcon.classList.remove("hidden");
+      if (dlAudioIcon) dlAudioIcon.classList.add("hidden");
+      if (selectedAudio === "without") {
+        dlText.textContent = "Download Video (No Sound)";
+      } else {
+        const qLabel = selectedQuality === "1440" ? "2K Upscaled" : (selectedQuality === "best" ? "Original" : `${selectedQuality}p`);
+        dlText.textContent = `Download Video (${qLabel})`;
+      }
+      if (qualityHelpText) {
+        qualityHelpText.textContent = "Merged in MP4 format. Choose with or without sound. 2K mode applies high-grade lanczos upscaling.";
+      }
+    }
+  }
+
+  // ==========================================================================
   // INPUT INTERACTIONS (CLEAR & PASTE)
   // ==========================================================================
   function detectPlatform(url) {
@@ -154,7 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Clicking platform badge populates placeholder guidance
   platformBadges.forEach(badge => {
     badge.addEventListener("click", () => {
       const p = badge.dataset.platform;
@@ -181,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnArrow) btnArrow.classList.add("hidden");
     if (spinner) spinner.classList.remove("hidden");
 
-    setStatus("Inspecting video streams & metadata…", "loading");
+    setStatus("Inspecting streams & audio metadata…", "loading");
 
     try {
       const response = await fetch("/api/info", {
@@ -239,7 +284,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } else if (limit === "1080") {
           available = heights.some(h => h <= 1080);
         } else if (limit === "1440") {
-          // 2K mode upscales source
           available = heights.length > 0;
         }
 
@@ -247,24 +291,33 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.title = available ? "" : "Resolution not available for this source";
       });
 
-      // Default to "best"
+      // Reset to defaults
+      selectedFormat = "mp4";
+      formatButtons.forEach(b => b.classList.toggle("selected", b.dataset.format === "mp4"));
+      videoOptionsWrapper?.classList.remove("hidden");
+      audioOptionsWrapper?.classList.add("hidden");
+
       selectedQuality = "best";
       qualityButtons.forEach(b => {
         b.classList.toggle("selected", b.dataset.quality === selectedQuality);
       });
 
-      // Default to "with" sound
       selectedAudio = "with";
       audioButtons.forEach(b => {
         b.classList.toggle("selected", b.dataset.audio === "with");
       });
-      const dlInitialText = downloadBtn?.querySelector(".dl-text");
-      if (dlInitialText) dlInitialText.textContent = "Download Video";
+
+      selectedBitrate = "320";
+      mp3QualityButtons.forEach(b => {
+        b.classList.toggle("selected", b.dataset.bitrate === "320");
+      });
+
+      updateActionUI();
 
       clearStatus();
       resultBox.classList.remove("hidden");
       resultBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      showToast("Video streams analyzed successfully!");
+      showToast("Media streams analyzed successfully! Choose MP4 or MP3.");
 
     } catch (err) {
       setStatus(err.message || "Failed to process URL. Check the link and try again.", "error");
@@ -277,7 +330,30 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================================================================
-  // QUALITY SELECTION
+  // FORMAT SELECTION (MP4 VIDEO vs MP3 AUDIO)
+  // ==========================================================================
+  formatButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedFormat = btn.dataset.format || "mp4";
+      formatButtons.forEach(b => b.classList.toggle("selected", b === btn));
+
+      if (selectedFormat === "mp3") {
+        videoOptionsWrapper?.classList.add("hidden");
+        audioOptionsWrapper?.classList.remove("hidden");
+        showToast(`Switched to MP3 Audio Mode (${selectedBitrate} kbps)`);
+      } else {
+        audioOptionsWrapper?.classList.add("hidden");
+        videoOptionsWrapper?.classList.remove("hidden");
+        showToast("Switched to MP4 Video Mode");
+      }
+
+      clearStatus();
+      updateActionUI();
+    });
+  });
+
+  // ==========================================================================
+  // QUALITY SELECTION (MP4)
   // ==========================================================================
   qualityButtons.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -285,6 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedQuality = btn.dataset.quality;
       qualityButtons.forEach(b => b.classList.toggle("selected", b === btn));
       clearStatus();
+      updateActionUI();
       showToast(`Selected format: ${btn.querySelector(".quality-main")?.textContent || selectedQuality}`);
     });
   });
@@ -297,15 +374,25 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedAudio = btn.dataset.audio || "with";
       audioButtons.forEach(b => b.classList.toggle("selected", b === btn));
       clearStatus();
-
-      const dlText = downloadBtn?.querySelector(".dl-text");
+      updateActionUI();
       if (selectedAudio === "without") {
         showToast("Audio set to: Without Sound (Muted)");
-        if (dlText) dlText.textContent = "Download Video (No Sound)";
       } else {
         showToast("Audio set to: With Sound (Original Audio)");
-        if (dlText) dlText.textContent = "Download Video";
       }
+    });
+  });
+
+  // ==========================================================================
+  // MP3 BITRATE SELECTION
+  // ==========================================================================
+  mp3QualityButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedBitrate = btn.dataset.bitrate || "320";
+      mp3QualityButtons.forEach(b => b.classList.toggle("selected", b === btn));
+      clearStatus();
+      updateActionUI();
+      showToast(`Selected MP3 bitrate: ${selectedBitrate} kbps`);
     });
   });
 
@@ -317,16 +404,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     downloadBtn.disabled = true;
     const dlText = downloadBtn.querySelector(".dl-text");
-    const dlIcon = downloadBtn.querySelector(".dl-icon");
     const dlSpinner = downloadBtn.querySelector(".dl-spinner");
 
-    if (dlText) dlText.textContent = "Processing & Merging…";
-    if (dlIcon) dlIcon.classList.add("hidden");
+    if (dlVideoIcon) dlVideoIcon.classList.add("hidden");
+    if (dlAudioIcon) dlAudioIcon.classList.add("hidden");
     if (dlSpinner) dlSpinner.classList.remove("hidden");
 
-    if (selectedAudio === "without") {
+    if (selectedFormat === "mp3") {
+      if (dlText) dlText.textContent = "Extracting & Converting MP3…";
+      setStatus(`Downloading and converting audio stream to ${selectedBitrate} kbps MP3. Please keep this tab open…`, "loading");
+    } else if (selectedAudio === "without") {
+      if (dlText) dlText.textContent = "Processing Video (Muted)…";
       setStatus("Downloading and generating silent video (no sound). Please keep this tab open…", "loading");
     } else {
+      if (dlText) dlText.textContent = "Processing & Merging Video…";
       setStatus("Downloading and packaging video file with audio. Please keep this tab open…", "loading");
     }
 
@@ -336,8 +427,11 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           url: currentUrl,
+          format: selectedFormat,
           quality: selectedQuality,
-          audio: selectedAudio
+          audio: selectedAudio,
+          audio_quality: selectedBitrate,
+          title: currentVideoData?.title || ""
         })
       });
 
@@ -353,9 +447,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition") || "";
       const match = disposition.match(/filename="?([^";]+)"?/i);
-      const defaultFilename = selectedAudio === "without"
-        ? `video_${selectedQuality}_no_sound.mp4`
-        : `video_${selectedQuality}.mp4`;
+      
+      const safeTitle = (currentVideoData?.title || "download").replace(/[\\/*?:"<>|]/g, "").trim().substring(0, 60);
+      const defaultFilename = selectedFormat === "mp3"
+        ? `${safeTitle || 'audio'}.mp3`
+        : (selectedAudio === "without" ? `${safeTitle || 'video'}_no_sound.mp4` : `${safeTitle || 'video'}.mp4`);
       const filename = match ? match[1] : defaultFilename;
 
       const objectUrl = URL.createObjectURL(blob);
@@ -367,30 +463,36 @@ document.addEventListener("DOMContentLoaded", () => {
       a.remove();
       URL.revokeObjectURL(objectUrl);
 
-      const successLabel = selectedAudio === "without" ? "Saved without sound" : "Saved with sound";
-      setStatus(`Download complete! ${successLabel} as "${filename}". Check your browser downloads.`, "success");
-      showToast(selectedAudio === "without" ? "Downloaded without sound!" : "Download completed successfully!");
+      if (selectedFormat === "mp3") {
+        setStatus(`Download complete! Saved as MP3 audio "${filename}". Check your browser downloads.`, "success");
+        showToast("MP3 Download completed successfully!");
+      } else {
+        const successLabel = selectedAudio === "without" ? "Saved without sound" : "Saved with sound";
+        setStatus(`Download complete! ${successLabel} as "${filename}". Check your browser downloads.`, "success");
+        showToast(selectedAudio === "without" ? "Downloaded without sound!" : "Download completed successfully!");
+      }
 
       // Save to Session History
       if (currentVideoData) {
         saveToHistory({
-          title: currentVideoData.title || "Video",
+          title: currentVideoData.title || "Media",
           url: currentUrl,
           thumbnail: currentVideoData.thumbnail || "",
+          format: selectedFormat,
           quality: selectedQuality,
           audio: selectedAudio,
-          platform: currentVideoData.platform || "Video",
+          audioQuality: selectedBitrate,
+          platform: currentVideoData.platform || "Media",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
       }
 
     } catch (err) {
-      setStatus(err.message || "Failed to download video file.", "error");
+      setStatus(err.message || "Failed to download media file.", "error");
     } finally {
       downloadBtn.disabled = false;
-      if (dlText) dlText.textContent = selectedAudio === "without" ? "Download Video (No Sound)" : "Download Video";
-      if (dlIcon) dlIcon.classList.remove("hidden");
       if (dlSpinner) dlSpinner.classList.add("hidden");
+      updateActionUI();
     }
   });
 
@@ -407,7 +509,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveToHistory(item) {
     const list = getHistory();
-    // Prepend and keep max 8 items
     const updated = [item, ...list.filter(x => x.url !== item.url)].slice(0, 8);
     localStorage.setItem("hash_history", JSON.stringify(updated));
     renderHistory();
@@ -423,23 +524,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     historySection.classList.remove("hidden");
-    historyList.innerHTML = list.map(item => `
-      <div class="history-item">
-        <div class="history-item-left">
-          ${item.thumbnail ? `<img src="${item.thumbnail}" class="history-thumb" alt="Thumb" loading="lazy">` : `<div class="history-thumb"></div>`}
-          <div class="history-info">
-            <div class="history-title" title="${item.title}">${item.title}</div>
-            <div class="history-meta">
-              <span class="history-tag">${item.platform}</span>
-              <span>• ${item.quality.toUpperCase()}</span>
-              <span>• ${item.audio === "without" ? "🔇 Muted" : "🔊 With Sound"}</span>
-              <span>• ${item.timestamp}</span>
+    historyList.innerHTML = list.map(item => {
+      const isMp3 = item.format === "mp3";
+      const formatBadge = isMp3
+        ? `<span class="history-format-tag mp3-tag">🎵 MP3 (${item.audioQuality || "320"}k)</span>`
+        : `<span class="history-format-tag mp4-tag">🎬 ${(item.quality || "Original").toUpperCase()}</span>`;
+      const audioBadge = !isMp3 && item.audio === "without" ? `<span>• 🔇 Muted</span>` : "";
+
+      return `
+        <div class="history-item">
+          <div class="history-item-left">
+            ${item.thumbnail ? `<img src="${item.thumbnail}" class="history-thumb" alt="Thumb" loading="lazy">` : `<div class="history-thumb"></div>`}
+            <div class="history-info">
+              <div class="history-title" title="${item.title}">${item.title}</div>
+              <div class="history-meta">
+                <span class="history-tag">${item.platform}</span>
+                ${formatBadge}
+                ${audioBadge}
+                <span>• ${item.timestamp}</span>
+              </div>
             </div>
           </div>
+          <button class="history-action-btn" data-url="${item.url}" type="button">Load</button>
         </div>
-        <button class="history-action-btn" data-url="${item.url}" type="button">Load</button>
-      </div>
-    `).join("");
+      `;
+    }).join("");
 
     historyList.querySelectorAll(".history-action-btn").forEach(btn => {
       btn.addEventListener("click", () => {

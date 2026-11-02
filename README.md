@@ -1,13 +1,16 @@
-# Hash — Studio Video Downloader
+# Hash — Studio Video & Audio Downloader
 
-A modern, high-performance personal video downloader with a Flask backend and a modern SaaS-grade web interface. It uses `yt-dlp` and `ffmpeg` to inspect, upscale, and download supported media URLs locally on your computer.
+A modern, high-performance personal video and MP3 audio downloader with a Flask backend and a modern SaaS-grade web interface. It uses `yt-dlp` and `ffmpeg` to inspect, upscale, and download supported media URLs locally on your computer in both MP4 Video and MP3 Audio formats.
 
 ## ✨ Features
+- **Dual Format Support**: One-click toggle between **MP4 Video** and **MP3 Audio** extraction.
+- **MP3 Studio Quality**: Choose from 320 kbps (Studio), 256 kbps (High Fidelity), 192 kbps (Standard), or 128 kbps (Compact).
+- **Smart Stream Quality**: For MP4, choose from Original (Best Available), 1080p Full HD, 720p HD, and AI Lanczos-upscaled 2K (1440p).
+- **Audio Control**: Option to download MP4 videos with sound or muted (no sound).
 - **Modern Studio Interface**: Sleek dark/light theme switcher with glassmorphism and ambient glow effects.
 - **Multi-Platform Support**: Instagram Reels, YouTube Videos & Shorts, Facebook Watch, and Pinterest Pins.
-- **Smart Stream Quality**: Choose from Original (Best Available), 1080p Full HD, 720p HD, and AI Lanczos-upscaled 2K (1440p).
 - **One-Click Clipboard**: Instant URL paste button and live platform auto-detection as you type.
-- **Recent Session History**: Built-in history to re-load or review your downloaded media.
+- **Recent Session History**: Built-in history to re-load or review your downloaded MP4 and MP3 files.
 - **100% Private & Local**: Runs entirely on your local machine with zero external analytics or trackers.
 
 ## Requirements

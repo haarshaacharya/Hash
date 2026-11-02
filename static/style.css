@@ -842,6 +842,140 @@ body {
   margin-bottom: 20px;
 }
 
+/* ==========================================================================
+   FORMAT SELECTOR (MP4 vs MP3)
+   ========================================================================== */
+
+.format-section {
+  margin-bottom: 20px;
+}
+
+.format-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.format-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.format-subtext {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.format-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.format-opt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 13px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  overflow: hidden;
+}
+
+.format-opt:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-tertiary);
+  transform: translateY(-2px);
+}
+
+.format-opt.selected {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.28), inset 0 0 0 1px var(--accent-primary);
+}
+
+.format-opt[data-format="mp3"].selected {
+  background: rgba(168, 85, 247, 0.14);
+  border-color: #a855f7;
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.3), inset 0 0 0 1px #a855f7;
+}
+
+.format-opt-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.format-badge-pill {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--border-subtle);
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.format-opt.selected .format-badge-pill {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.format-opt[data-format="mp3"].selected .format-badge-pill.mp3-badge {
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  color: #fff;
+}
+
+.format-icon-slot {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.format-icon-slot svg {
+  width: 15px;
+  height: 15px;
+}
+
+.format-opt.selected .format-icon-slot {
+  color: var(--accent-primary);
+}
+
+.format-opt[data-format="mp3"].selected .format-icon-slot {
+  color: #c084fc;
+}
+
+.format-opt[data-format="mp3"].selected .radio-indicator {
+  background: #a855f7;
+  border-color: #a855f7;
+  box-shadow: 0 0 8px #a855f7;
+}
+
+.format-main {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.format-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.format-opt.selected .format-sub {
+  color: var(--text-secondary);
+}
+
 /* Quality Selector */
 .quality-section {
   margin-bottom: 20px;
@@ -1082,6 +1216,111 @@ body {
   color: var(--text-secondary);
 }
 
+/* ==========================================================================
+   MP3 QUALITY & AUDIO OPTIONS WRAPPER
+   ========================================================================== */
+
+.video-options-wrapper,
+.audio-options-wrapper {
+  animation: fadeInScale 0.25s ease-out;
+}
+
+.mp3-quality-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.mp3-quality {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px 10px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  overflow: hidden;
+}
+
+.mp3-quality:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-tertiary);
+  transform: translateY(-2px);
+}
+
+.mp3-quality.selected {
+  background: rgba(168, 85, 247, 0.14);
+  border-color: #a855f7;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.28), inset 0 0 0 1px #a855f7;
+}
+
+.mp3-quality.selected .quality-badge-pill.mp3-pill {
+  background: #a855f7;
+  color: #fff;
+}
+
+.mp3-quality.selected .radio-indicator {
+  background: #a855f7;
+  border-color: #a855f7;
+  box-shadow: 0 0 8px #a855f7;
+}
+
+.mp3-quality.selected .quality-sub {
+  color: var(--text-secondary);
+}
+
+.mp3-info-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  margin-top: 14px;
+  margin-bottom: 20px;
+}
+
+.mp3-info-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.mp3-info-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mp3-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mp3-info-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e9d5ff;
+}
+
+.mp3-info-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
 /* Download CTA Button */
 .action-footer {
   margin-top: auto;
@@ -1110,6 +1349,16 @@ body {
   background: var(--accent-gradient-hover);
   transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(99, 102, 241, 0.6);
+}
+
+.download-btn.mp3-mode {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #ec4899 100%);
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.45);
+}
+
+.download-btn.mp3-mode:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #db2777 100%);
+  box-shadow: 0 12px 30px rgba(168, 85, 247, 0.6);
 }
 
 .download-btn:disabled {
@@ -1242,6 +1491,28 @@ body {
 .history-tag {
   color: var(--accent-primary);
   font-weight: 700;
+}
+
+.history-format-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.history-format-tag.mp3-tag {
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.history-format-tag.mp4-tag {
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 .history-action-btn {
@@ -1401,7 +1672,8 @@ body {
   .features-grid {
     grid-template-columns: 1fr;
   }
-  .quality-grid {
+  .quality-grid,
+  .mp3-quality-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -1452,6 +1724,7 @@ body {
 }
 
 @media (max-width: 500px) {
+  .format-grid,
   .audio-grid {
     grid-template-columns: 1fr;
   }
