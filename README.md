@@ -1,8 +1,11 @@
-# Hash — Studio Video & Audio Downloader
+# Hash — Studio Video, Audio & Reel Editor
 
-A modern, high-performance personal video and MP3 audio downloader with a Flask backend and a modern SaaS-grade web interface. It uses `yt-dlp` and `ffmpeg` to inspect, upscale, and download supported media URLs locally on your computer in both MP4 Video and MP3 Audio formats.
+A modern, high-performance personal video downloader, MP3 audio extractor, and Reel Studio editor with a Flask backend and SaaS-grade web interface. It uses `yt-dlp` and `ffmpeg` to inspect, upscale, clean watermarks, and edit text on reels locally on your computer.
 
 ## ✨ Features
+- **Reel Studio (Watermark & Logo Inpainter)**: Permanently remove channel logos, icons, and badges (e.g. corner logos like in the top-right) using smart FFmpeg `delogo` inpainting without leaving blur marks.
+- **In-Reel Text Remover & Replacer**: Erase hardcoded quotes/text from reels (e.g. center quotes like *"This life or nothing."*) and optionally replace them with your own custom text, font size, and color.
+- **Interactive Live Preview Canvas**: See exact removal and text bounding boxes right on the reel thumbnail with 1-click positioning presets or custom coordinate sliders.
 - **Dual Format Support**: One-click toggle between **MP4 Video** and **MP3 Audio** extraction.
 - **MP3 Studio Quality**: Choose from 320 kbps (Studio), 256 kbps (High Fidelity), 192 kbps (Standard), or 128 kbps (Compact).
 - **Smart Stream Quality**: For MP4, choose from Original (Best Available), 1080p Full HD, 720p HD, and AI Lanczos-upscaled 2K (1440p).
@@ -10,13 +13,13 @@ A modern, high-performance personal video and MP3 audio downloader with a Flask 
 - **Modern Studio Interface**: Sleek dark/light theme switcher with glassmorphism and ambient glow effects.
 - **Multi-Platform Support**: Instagram Reels, YouTube Videos & Shorts, Facebook Watch, and Pinterest Pins.
 - **One-Click Clipboard**: Instant URL paste button and live platform auto-detection as you type.
-- **Recent Session History**: Built-in history to re-load or review your downloaded MP4 and MP3 files.
+- **Recent Session History**: Built-in history to re-load or review your downloaded MP4, MP3, and cleaned reels.
 - **100% Private & Local**: Runs entirely on your local machine with zero external analytics or trackers.
 
 ## Requirements
 - Python 3.10+
 - Internet access
-- FFmpeg recommended for merging video/audio streams and 2K upscaling (`python -m pip install imageio-ffmpeg` or system FFmpeg)
+- FFmpeg (installed via `imageio-ffmpeg` or system FFmpeg)
 
 ## Run on Windows
 1. Open PowerShell or Command Prompt in this folder.

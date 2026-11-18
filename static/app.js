@@ -1,8 +1,9 @@
 /**
  * HASH STUDIO — FRONTEND ENGINE
  * Handles theme toggling, clipboard operations, stream inspection,
- * media format switching (MP4 Video / MP3 Audio), quality/bitrate selection,
- * download execution, and download history.
+ * media format switching (MP4 Video / MP3 Audio / Reel Studio Edit),
+ * mouse/cursor-driven watermark & text positioning/resizing,
+ * download execution, and session history.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -29,14 +30,58 @@ document.addEventListener("DOMContentLoaded", () => {
   const formatButtons = document.querySelectorAll(".format-opt");
   const videoOptionsWrapper = document.querySelector("#video-options-wrapper");
   const audioOptionsWrapper = document.querySelector("#audio-options-wrapper");
+  const editOptionsWrapper = document.querySelector("#edit-options-wrapper");
+  
   const qualityButtons = document.querySelectorAll(".quality");
   const audioButtons = document.querySelectorAll(".audio-opt");
   const mp3QualityButtons = document.querySelectorAll(".mp3-quality");
   
+  // Editor Interactive Elements
+  const editorCanvas = document.querySelector("#editor-canvas");
+  const editorPreviewImg = document.querySelector("#editor-preview-img");
+  const overlayLogoZone = document.querySelector("#overlay-logo-zone");
+  const overlayTextZone = document.querySelector("#overlay-text-zone");
+  const zoneLiveTextPreview = document.querySelector("#zone-live-text-preview");
+
+  const selectBoxLogo = document.querySelector("#select-box-logo");
+  const selectBoxText = document.querySelector("#select-box-text");
+
+  const logoEnableToggle = document.querySelector("#logo-enable-toggle");
+  const logoControlsBody = document.querySelector("#logo-controls-body");
+  const logoPresetButtons = document.querySelectorAll("[data-logo-preset]");
+  const logoMethodButtons = document.querySelectorAll("[data-logo-method]");
+  const logoXSlider = document.querySelector("#logo-x-slider");
+  const logoYSlider = document.querySelector("#logo-y-slider");
+  const logoWSlider = document.querySelector("#logo-w-slider");
+  const logoHSlider = document.querySelector("#logo-h-slider");
+  const logoXVal = document.querySelector("#logo-x-val");
+  const logoYVal = document.querySelector("#logo-y-val");
+  const logoWVal = document.querySelector("#logo-w-val");
+  const logoHVal = document.querySelector("#logo-h-val");
+
+  const textEnableToggle = document.querySelector("#text-enable-toggle");
+  const textControlsBody = document.querySelector("#text-controls-body");
+  const textPresetButtons = document.querySelectorAll("[data-text-preset]");
+  const textMethodButtons = document.querySelectorAll("[data-text-method]");
+  const textActionButtons = document.querySelectorAll("[data-text-action]");
+  const customTextFieldWrap = document.querySelector("#custom-text-field-wrap");
+  const customTextInput = document.querySelector("#custom-text-input");
+  const colorButtons = document.querySelectorAll(".color-btn");
+  const textSizeButtons = document.querySelectorAll("[data-size]");
+  const textXSlider = document.querySelector("#text-x-slider");
+  const textYSlider = document.querySelector("#text-y-slider");
+  const textWSlider = document.querySelector("#text-w-slider");
+  const textHSlider = document.querySelector("#text-h-slider");
+  const textXVal = document.querySelector("#text-x-val");
+  const textYVal = document.querySelector("#text-y-val");
+  const textWVal = document.querySelector("#text-w-val");
+  const textHVal = document.querySelector("#text-h-val");
+
   // CTA Elements
   const downloadBtn = document.querySelector("#download-btn");
   const dlVideoIcon = document.querySelector(".dl-video-icon");
   const dlAudioIcon = document.querySelector(".dl-audio-icon");
+  const dlEditIcon = document.querySelector(".dl-edit-icon");
   const qualityHelpText = document.querySelector(".quality-help-text");
   const copyLinkBtn = document.querySelector("#copy-link-btn");
   
@@ -48,12 +93,35 @@ document.addEventListener("DOMContentLoaded", () => {
   const toastBox = document.querySelector("#toast");
 
   // --- State Variables ---
-  let selectedFormat = "mp4"; // "mp4" or "mp3"
+  let selectedFormat = "mp4"; // "mp4", "mp3", or "edit"
   let selectedQuality = "best";
   let selectedAudio = "with";
   let selectedBitrate = "320"; // "320", "256", "192", "128"
   let currentUrl = "";
   let currentVideoData = null;
+
+  // Reel Studio State Variables (TIGHT BOUNDS BY DEFAULT TO PREVENT SMEARING)
+  let activeBox = "text"; // "logo" or "text"
+  let logoEnabled = true;
+  let logoX = 76, logoY = 5, logoW = 20, logoH = 10; // Top-Right preset (matches user Image 2 logo)
+  let logoMethod = "delogo"; // "delogo", "blur", "mask"
+
+  let textEnabled = true;
+  let textX = 36, textY = 48, textW = 28, textH = 6; // Compact preset (tightly fits "my vibe.")
+  let textMethod = "delogo"; // "delogo", "blur", "mask"
+  let textAction = "erase"; // "erase" or "replace"
+  let customText = "";
+  let textColor = "white";
+  let textSize = 34;
+
+  // Drag & Resize State
+  let isDragging = false;
+  let isResizing = false;
+  let resizeHandle = null;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let initialBoxState = null;
+  let wasDragging = false;
 
   // ==========================================================================
   // THEME MANAGEMENT
@@ -119,18 +187,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const dlText = downloadBtn?.querySelector(".dl-text");
     if (!dlText) return;
 
-    if (selectedFormat === "mp3") {
+    downloadBtn.classList.remove("mp3-mode", "edit-mode");
+    if (dlVideoIcon) dlVideoIcon.classList.add("hidden");
+    if (dlAudioIcon) dlAudioIcon.classList.add("hidden");
+    if (dlEditIcon) dlEditIcon.classList.add("hidden");
+
+    if (selectedFormat === "edit") {
+      downloadBtn.classList.add("edit-mode");
+      if (dlEditIcon) dlEditIcon.classList.remove("hidden");
+      dlText.textContent = "Clean Watermark & Download Reel";
+      if (qualityHelpText) {
+        qualityHelpText.textContent = "Tight bounding inpaint & soft blur removes logos without horizontal smearing.";
+      }
+    } else if (selectedFormat === "mp3") {
       downloadBtn.classList.add("mp3-mode");
-      if (dlVideoIcon) dlVideoIcon.classList.add("hidden");
       if (dlAudioIcon) dlAudioIcon.classList.remove("hidden");
       dlText.textContent = `Download Audio (MP3 · ${selectedBitrate} kbps)`;
       if (qualityHelpText) {
-        qualityHelpText.textContent = `High-fidelity MP3 extraction (${selectedBitrate} kbps). Compatible with iPhone, Android, car stereos, and all music players.`;
+        qualityHelpText.textContent = `High-fidelity MP3 extraction (${selectedBitrate} kbps). Compatible with iPhone, Android, and car stereos.`;
       }
     } else {
-      downloadBtn.classList.remove("mp3-mode");
       if (dlVideoIcon) dlVideoIcon.classList.remove("hidden");
-      if (dlAudioIcon) dlAudioIcon.classList.add("hidden");
       if (selectedAudio === "without") {
         dlText.textContent = "Download Video (No Sound)";
       } else {
@@ -142,6 +219,272 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
+
+  // ==========================================================================
+  // REEL STUDIO INTERACTIVE PREVIEW & ACTIVE TARGET UPDATER
+  // ==========================================================================
+  function setActiveBox(box) {
+    activeBox = box;
+    selectBoxLogo?.classList.toggle("active", activeBox === "logo");
+    selectBoxText?.classList.toggle("active", activeBox === "text");
+    overlayLogoZone?.classList.toggle("active-target", activeBox === "logo");
+    overlayTextZone?.classList.toggle("active-target", activeBox === "text");
+  }
+
+  selectBoxLogo?.addEventListener("click", () => {
+    setActiveBox("logo");
+    showToast("Active: Watermark Box. Drag on video to position!");
+  });
+
+  selectBoxText?.addEventListener("click", () => {
+    setActiveBox("text");
+    showToast("Active: Text Box. Drag on video or click on text!");
+  });
+
+  function updateEditorPreview() {
+    if (overlayLogoZone) {
+      overlayLogoZone.classList.toggle("hidden", !logoEnabled);
+      overlayLogoZone.style.left = `${logoX}%`;
+      overlayLogoZone.style.top = `${logoY}%`;
+      overlayLogoZone.style.width = `${logoW}%`;
+      overlayLogoZone.style.height = `${logoH}%`;
+      overlayLogoZone.classList.toggle("active-target", activeBox === "logo");
+    }
+
+    if (overlayTextZone) {
+      overlayTextZone.classList.toggle("hidden", !textEnabled);
+      overlayTextZone.style.left = `${textX}%`;
+      overlayTextZone.style.top = `${textY}%`;
+      overlayTextZone.style.width = `${textW}%`;
+      overlayTextZone.style.height = `${textH}%`;
+      overlayTextZone.classList.toggle("active-target", activeBox === "text");
+
+      if (zoneLiveTextPreview) {
+        if (textAction === "replace" && customText.trim()) {
+          zoneLiveTextPreview.textContent = customText;
+          zoneLiveTextPreview.style.color = textColor;
+          zoneLiveTextPreview.style.fontSize = `${Math.max(10, Math.round(textSize * 0.35))}px`;
+        } else {
+          zoneLiveTextPreview.textContent = textAction === "replace" ? "Your New Text Here" : "Original Text Erased";
+          zoneLiveTextPreview.style.color = "#fff";
+          zoneLiveTextPreview.style.fontSize = "10px";
+        }
+      }
+    }
+
+    if (logoXVal) logoXVal.textContent = `${logoX}%`;
+    if (logoYVal) logoYVal.textContent = `${logoY}%`;
+    if (logoWVal) logoWVal.textContent = `${logoW}%`;
+    if (logoHVal) logoHVal.textContent = `${logoH}%`;
+
+    if (textXVal) textXVal.textContent = `${textX}%`;
+    if (textYVal) textYVal.textContent = `${textY}%`;
+    if (textWVal) textWVal.textContent = `${textW}%`;
+    if (textHVal) textHVal.textContent = `${textH}%`;
+  }
+
+  // ==========================================================================
+  // CURSOR MOUSE DRAG & RESIZE ENGINE FOR PREVIEW CANVAS
+  // ==========================================================================
+  function initPointerEvents(zoneElement, boxType) {
+    if (!zoneElement) return;
+
+    zoneElement.addEventListener("mousedown", (e) => {
+      // Don't drag if clicked on a corner resize handle
+      if (e.target.classList.contains("zone-corner")) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      setActiveBox(boxType);
+      isDragging = true;
+      wasDragging = false;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+
+      initialBoxState = boxType === "logo"
+        ? { x: logoX, y: logoY, w: logoW, h: logoH }
+        : { x: textX, y: textY, w: textW, h: textH };
+    });
+
+    zoneElement.addEventListener("touchstart", (e) => {
+      if (e.target.classList.contains("zone-corner")) return;
+      if (e.touches.length !== 1) return;
+
+      setActiveBox(boxType);
+      isDragging = true;
+      wasDragging = false;
+      dragStartX = e.touches[0].clientX;
+      dragStartY = e.touches[0].clientY;
+
+      initialBoxState = boxType === "logo"
+        ? { x: logoX, y: logoY, w: logoW, h: logoH }
+        : { x: textX, y: textY, w: textW, h: textH };
+    }, { passive: true });
+
+    // Handle corner resizing
+    const corners = zoneElement.querySelectorAll(".zone-corner");
+    corners.forEach(corner => {
+      corner.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setActiveBox(boxType);
+        isResizing = true;
+        wasDragging = false;
+        resizeHandle = corner.dataset.handle;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+
+        initialBoxState = boxType === "logo"
+          ? { x: logoX, y: logoY, w: logoW, h: logoH }
+          : { x: textX, y: textY, w: textW, h: textH };
+      });
+
+      corner.addEventListener("touchstart", (e) => {
+        if (e.touches.length !== 1) return;
+        e.stopPropagation();
+
+        setActiveBox(boxType);
+        isResizing = true;
+        wasDragging = false;
+        resizeHandle = corner.dataset.handle;
+        dragStartX = e.touches[0].clientX;
+        dragStartY = e.touches[0].clientY;
+
+        initialBoxState = boxType === "logo"
+          ? { x: logoX, y: logoY, w: logoW, h: logoH }
+          : { x: textX, y: textY, w: textW, h: textH };
+      }, { passive: true });
+    });
+  }
+
+  initPointerEvents(overlayLogoZone, "logo");
+  initPointerEvents(overlayTextZone, "text");
+
+  // Global window pointer move for buttery smooth dragging
+  function handlePointerMove(e) {
+    if (!isDragging && !isResizing) return;
+    if (!editorCanvas) return;
+
+    const rect = editorCanvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
+    if (clientX === undefined || clientY === undefined) return;
+
+    const dx = clientX - dragStartX;
+    const dy = clientY - dragStartY;
+
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      wasDragging = true;
+    }
+
+    const dxPct = (dx / rect.width) * 100;
+    const dyPct = (dy / rect.height) * 100;
+
+    if (isDragging) {
+      if (activeBox === "logo") {
+        logoX = Math.max(0, Math.min(100 - logoW, Math.round(initialBoxState.x + dxPct)));
+        logoY = Math.max(0, Math.min(100 - logoH, Math.round(initialBoxState.y + dyPct)));
+        if (logoXSlider) logoXSlider.value = logoX;
+        if (logoYSlider) logoYSlider.value = logoY;
+      } else {
+        textX = Math.max(0, Math.min(100 - textW, Math.round(initialBoxState.x + dxPct)));
+        textY = Math.max(0, Math.min(100 - textH, Math.round(initialBoxState.y + dyPct)));
+        if (textXSlider) textXSlider.value = textX;
+        if (textYSlider) textYSlider.value = textY;
+      }
+      updateEditorPreview();
+    } else if (isResizing) {
+      let newX = initialBoxState.x;
+      let newY = initialBoxState.y;
+      let newW = initialBoxState.w;
+      let newH = initialBoxState.h;
+
+      if (resizeHandle === "br") {
+        newW = Math.max(4, Math.min(100 - newX, Math.round(initialBoxState.w + dxPct)));
+        newH = Math.max(2, Math.min(100 - newY, Math.round(initialBoxState.h + dyPct)));
+      } else if (resizeHandle === "bl") {
+        const maxLeft = initialBoxState.x + initialBoxState.w - 4;
+        newX = Math.max(0, Math.min(maxLeft, Math.round(initialBoxState.x + dxPct)));
+        newW = Math.round(initialBoxState.w - (newX - initialBoxState.x));
+        newH = Math.max(2, Math.min(100 - newY, Math.round(initialBoxState.h + dyPct)));
+      } else if (resizeHandle === "tr") {
+        const maxTop = initialBoxState.y + initialBoxState.h - 2;
+        newY = Math.max(0, Math.min(maxTop, Math.round(initialBoxState.y + dyPct)));
+        newH = Math.round(initialBoxState.h - (newY - initialBoxState.y));
+        newW = Math.max(4, Math.min(100 - newX, Math.round(initialBoxState.w + dxPct)));
+      } else if (resizeHandle === "tl") {
+        const maxLeft = initialBoxState.x + initialBoxState.w - 4;
+        const maxTop = initialBoxState.y + initialBoxState.h - 2;
+        newX = Math.max(0, Math.min(maxLeft, Math.round(initialBoxState.x + dxPct)));
+        newY = Math.max(0, Math.min(maxTop, Math.round(initialBoxState.y + dyPct)));
+        newW = Math.round(initialBoxState.w - (newX - initialBoxState.x));
+        newH = Math.round(initialBoxState.h - (newY - initialBoxState.y));
+      }
+
+      if (activeBox === "logo") {
+        logoX = newX; logoY = newY; logoW = newW; logoH = newH;
+        if (logoXSlider) logoXSlider.value = logoX;
+        if (logoYSlider) logoYSlider.value = logoY;
+        if (logoWSlider) logoWSlider.value = logoW;
+        if (logoHSlider) logoHSlider.value = logoH;
+      } else {
+        textX = newX; textY = newY; textW = newW; textH = newH;
+        if (textXSlider) textXSlider.value = textX;
+        if (textYSlider) textYSlider.value = textY;
+        if (textWSlider) textWSlider.value = textW;
+        if (textHSlider) textHSlider.value = textH;
+      }
+      updateEditorPreview();
+    }
+  }
+
+  function handlePointerUp() {
+    if (isDragging || isResizing) {
+      isDragging = false;
+      isResizing = false;
+      resizeHandle = null;
+    }
+  }
+
+  window.addEventListener("mousemove", handlePointerMove, { passive: false });
+  window.addEventListener("mouseup", handlePointerUp);
+  window.addEventListener("touchmove", handlePointerMove, { passive: false });
+  window.addEventListener("touchend", handlePointerUp);
+
+  // Click-to-Position on Canvas (click anywhere on video to snap box right there!)
+  editorCanvas?.addEventListener("click", (e) => {
+    if (wasDragging) {
+      wasDragging = false;
+      return;
+    }
+    if (e.target.classList.contains("zone-corner") || e.target.closest(".overlay-zone")) {
+      return;
+    }
+
+    const rect = editorCanvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+    const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+
+    if (activeBox === "logo") {
+      logoX = Math.max(0, Math.min(100 - logoW, Math.round(clickX - logoW / 2)));
+      logoY = Math.max(0, Math.min(100 - logoH, Math.round(clickY - logoH / 2)));
+      if (logoXSlider) logoXSlider.value = logoX;
+      if (logoYSlider) logoYSlider.value = logoY;
+      showToast("Watermark box moved to cursor position!");
+    } else {
+      textX = Math.max(0, Math.min(100 - textW, Math.round(clickX - textW / 2)));
+      textY = Math.max(0, Math.min(100 - textH, Math.round(clickY - textH / 2)));
+      if (textXSlider) textXSlider.value = textX;
+      if (textYSlider) textYSlider.value = textY;
+      showToast("Text box moved to cursor position!");
+    }
+    updateEditorPreview();
+  });
 
   // ==========================================================================
   // INPUT INTERACTIONS (CLEAR & PASTE)
@@ -247,12 +590,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (videoSource) videoSource.textContent = `${data.platform || "Direct Stream"} • Verified Stream Available`;
       if (platformChip) platformChip.textContent = data.platform || "Video";
 
-      // Populate Thumbnail
-      if (thumbnailImg) {
-        if (data.thumbnail) {
+      // Populate Thumbnails
+      if (data.thumbnail) {
+        if (thumbnailImg) {
           thumbnailImg.src = data.thumbnail;
           thumbnailImg.style.display = "block";
-        } else {
+        }
+        if (editorPreviewImg) {
+          editorPreviewImg.src = data.thumbnail;
+        }
+      } else {
+        if (thumbnailImg) {
           thumbnailImg.removeAttribute("src");
           thumbnailImg.style.display = "none";
         }
@@ -296,6 +644,7 @@ document.addEventListener("DOMContentLoaded", () => {
       formatButtons.forEach(b => b.classList.toggle("selected", b.dataset.format === "mp4"));
       videoOptionsWrapper?.classList.remove("hidden");
       audioOptionsWrapper?.classList.add("hidden");
+      editOptionsWrapper?.classList.add("hidden");
 
       selectedQuality = "best";
       qualityButtons.forEach(b => {
@@ -312,12 +661,18 @@ document.addEventListener("DOMContentLoaded", () => {
         b.classList.toggle("selected", b.dataset.bitrate === "320");
       });
 
+      // Default tight text bounds
+      textX = 36; textY = 48; textW = 28; textH = 6;
+      logoX = 76; logoY = 5; logoW = 20; logoH = 10;
+      setActiveBox("text");
+
       updateActionUI();
+      updateEditorPreview();
 
       clearStatus();
       resultBox.classList.remove("hidden");
       resultBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      showToast("Media streams analyzed successfully! Choose MP4 or MP3.");
+      showToast("Media loaded! Choose MP4, MP3, or Clean & Edit Reel.");
 
     } catch (err) {
       setStatus(err.message || "Failed to process URL. Check the link and try again.", "error");
@@ -330,20 +685,24 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================================================================
-  // FORMAT SELECTION (MP4 VIDEO vs MP3 AUDIO)
+  // FORMAT SELECTION (MP4 VIDEO vs MP3 AUDIO vs REEL STUDIO)
   // ==========================================================================
   formatButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       selectedFormat = btn.dataset.format || "mp4";
       formatButtons.forEach(b => b.classList.toggle("selected", b === btn));
 
-      if (selectedFormat === "mp3") {
-        videoOptionsWrapper?.classList.add("hidden");
-        audioOptionsWrapper?.classList.remove("hidden");
+      videoOptionsWrapper?.classList.toggle("hidden", selectedFormat !== "mp4");
+      audioOptionsWrapper?.classList.toggle("hidden", selectedFormat !== "mp3");
+      editOptionsWrapper?.classList.toggle("hidden", selectedFormat !== "edit");
+
+      if (selectedFormat === "edit") {
+        showToast("Reel Studio Active: Use cursor on video to drag & resize boxes!");
+        setActiveBox("text");
+        updateEditorPreview();
+      } else if (selectedFormat === "mp3") {
         showToast(`Switched to MP3 Audio Mode (${selectedBitrate} kbps)`);
       } else {
-        audioOptionsWrapper?.classList.add("hidden");
-        videoOptionsWrapper?.classList.remove("hidden");
         showToast("Switched to MP4 Video Mode");
       }
 
@@ -353,8 +712,154 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================================================================
-  // QUALITY SELECTION (MP4)
+  // REEL STUDIO CONTROLS WIRING
   // ==========================================================================
+  // 1. Logo Removal Toggle
+  logoEnableToggle?.addEventListener("change", (e) => {
+    logoEnabled = e.target.checked;
+    logoControlsBody?.classList.toggle("disabled-body", !logoEnabled);
+    updateEditorPreview();
+    showToast(logoEnabled ? "Watermark removal enabled" : "Watermark removal disabled");
+  });
+
+  // Logo Presets
+  logoPresetButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      logoPresetButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const preset = btn.dataset.logoPreset;
+
+      if (preset === "top-right") {
+        logoX = 76; logoY = 5; logoW = 20; logoH = 10;
+      } else if (preset === "top-left") {
+        logoX = 4; logoY = 5; logoW = 20; logoH = 10;
+      } else if (preset === "bottom-right") {
+        logoX = 74; logoY = 86; logoW = 22; logoH = 9;
+      } else if (preset === "bottom-left") {
+        logoX = 4; logoY = 86; logoW = 22; logoH = 9;
+      }
+
+      if (logoXSlider) logoXSlider.value = logoX;
+      if (logoYSlider) logoYSlider.value = logoY;
+      if (logoWSlider) logoWSlider.value = logoW;
+      if (logoHSlider) logoHSlider.value = logoH;
+
+      setActiveBox("logo");
+      updateEditorPreview();
+      showToast(`Watermark preset set to ${preset.replace("-", " ").toUpperCase()}`);
+    });
+  });
+
+  // Logo Method
+  logoMethodButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      logoMethodButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      logoMethod = btn.dataset.logoMethod || "delogo";
+      showToast(`Logo removal style: ${btn.textContent.trim()}`);
+    });
+  });
+
+  // Logo Sliders
+  logoXSlider?.addEventListener("input", (e) => { logoX = parseInt(e.target.value); updateEditorPreview(); });
+  logoYSlider?.addEventListener("input", (e) => { logoY = parseInt(e.target.value); updateEditorPreview(); });
+  logoWSlider?.addEventListener("input", (e) => { logoW = parseInt(e.target.value); updateEditorPreview(); });
+  logoHSlider?.addEventListener("input", (e) => { logoH = parseInt(e.target.value); updateEditorPreview(); });
+
+  // 2. Text Editing Toggle
+  textEnableToggle?.addEventListener("change", (e) => {
+    textEnabled = e.target.checked;
+    textControlsBody?.classList.toggle("disabled-body", !textEnabled);
+    if (textEnabled) setActiveBox("text");
+    updateEditorPreview();
+    showToast(textEnabled ? "Text editing enabled" : "Text editing disabled");
+  });
+
+  // Text Presets (with compact "my vibe." tight box to prevent horizontal smears)
+  textPresetButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      textPresetButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const preset = btn.dataset.textPreset;
+
+      if (preset === "compact") {
+        textX = 36; textY = 48; textW = 28; textH = 6;
+      } else if (preset === "quote") {
+        textX = 20; textY = 47; textW = 60; textH = 8;
+      } else if (preset === "bottom") {
+        textX = 20; textY = 80; textW = 60; textH = 8;
+      } else if (preset === "top") {
+        textX = 20; textY = 14; textW = 60; textH = 8;
+      }
+
+      if (textXSlider) textXSlider.value = textX;
+      if (textYSlider) textYSlider.value = textY;
+      if (textWSlider) textWSlider.value = textW;
+      if (textHSlider) textHSlider.value = textH;
+
+      setActiveBox("text");
+      updateEditorPreview();
+      showToast(`Text preset: ${btn.textContent.trim()}`);
+    });
+  });
+
+  // Text Method (Smart Inpaint vs Frosted Blur vs Dark Mask)
+  textMethodButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      textMethodButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      textMethod = btn.dataset.textMethod || "delogo";
+      showToast(`Text removal technique: ${btn.textContent.trim()}`);
+    });
+  });
+
+  // Text Action (Erase vs Replace)
+  textActionButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      textActionButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      textAction = btn.dataset.textAction || "erase";
+      customTextFieldWrap?.classList.toggle("hidden", textAction !== "replace");
+      updateEditorPreview();
+      showToast(textAction === "replace" ? "Mode: Replace with your text" : "Mode: Erase original text only");
+    });
+  });
+
+  // Custom Text Input
+  customTextInput?.addEventListener("input", (e) => {
+    customText = e.target.value;
+    updateEditorPreview();
+  });
+
+  // Color Pickers
+  colorButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      colorButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      textColor = btn.dataset.color || "white";
+      updateEditorPreview();
+    });
+  });
+
+  // Font Size
+  textSizeButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      textSizeButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      textSize = parseInt(btn.dataset.size || "34");
+      updateEditorPreview();
+    });
+  });
+
+  // Text Sliders
+  textXSlider?.addEventListener("input", (e) => { textX = parseInt(e.target.value); updateEditorPreview(); });
+  textYSlider?.addEventListener("input", (e) => { textY = parseInt(e.target.value); updateEditorPreview(); });
+  textWSlider?.addEventListener("input", (e) => { textW = parseInt(e.target.value); updateEditorPreview(); });
+  textHSlider?.addEventListener("input", (e) => { textH = parseInt(e.target.value); updateEditorPreview(); });
+
+  // ==========================================================
+  // QUALITY SELECTION (MP4)
+  // ==========================================================
   qualityButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       if (btn.disabled) return;
@@ -366,9 +871,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ==========================================================================
+  // ==========================================================
   // AUDIO SELECTION (WITH SOUND / WITHOUT SOUND)
-  // ==========================================================================
+  // ==========================================================
   audioButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       selectedAudio = btn.dataset.audio || "with";
@@ -383,9 +888,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ==========================================================================
+  // ==========================================================
   // MP3 BITRATE SELECTION
-  // ==========================================================================
+  // ==========================================================
   mp3QualityButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       selectedBitrate = btn.dataset.bitrate || "320";
@@ -408,9 +913,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (dlVideoIcon) dlVideoIcon.classList.add("hidden");
     if (dlAudioIcon) dlAudioIcon.classList.add("hidden");
+    if (dlEditIcon) dlEditIcon.classList.add("hidden");
     if (dlSpinner) dlSpinner.classList.remove("hidden");
 
-    if (selectedFormat === "mp3") {
+    if (selectedFormat === "edit") {
+      if (dlText) dlText.textContent = "Inpainting & Cleaning Reel…";
+      setStatus("Applying precision inpaint watermark removal & text editing with FFmpeg. Please keep this tab open…", "loading");
+    } else if (selectedFormat === "mp3") {
       if (dlText) dlText.textContent = "Extracting & Converting MP3…";
       setStatus(`Downloading and converting audio stream to ${selectedBitrate} kbps MP3. Please keep this tab open…`, "loading");
     } else if (selectedAudio === "without") {
@@ -431,7 +940,24 @@ document.addEventListener("DOMContentLoaded", () => {
           quality: selectedQuality,
           audio: selectedAudio,
           audio_quality: selectedBitrate,
-          title: currentVideoData?.title || ""
+          title: currentVideoData?.title || "",
+          // Reel Studio parameters
+          logo_enabled: logoEnabled,
+          logo_x_pct: logoX,
+          logo_y_pct: logoY,
+          logo_w_pct: logoW,
+          logo_h_pct: logoH,
+          logo_method: logoMethod,
+          text_enabled: textEnabled,
+          text_x_pct: textX,
+          text_y_pct: textY,
+          text_w_pct: textW,
+          text_h_pct: textH,
+          text_method: textMethod,
+          text_action: textAction,
+          new_text: customText,
+          text_color: textColor,
+          text_size: textSize
         })
       });
 
@@ -449,9 +975,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const match = disposition.match(/filename="?([^";]+)"?/i);
       
       const safeTitle = (currentVideoData?.title || "download").replace(/[\\/*?:"<>|]/g, "").trim().substring(0, 60);
-      const defaultFilename = selectedFormat === "mp3"
-        ? `${safeTitle || 'audio'}.mp3`
-        : (selectedAudio === "without" ? `${safeTitle || 'video'}_no_sound.mp4` : `${safeTitle || 'video'}.mp4`);
+      let defaultFilename;
+      if (selectedFormat === "edit") {
+        defaultFilename = `${safeTitle || 'reel'}_clean.mp4`;
+      } else if (selectedFormat === "mp3") {
+        defaultFilename = `${safeTitle || 'audio'}.mp3`;
+      } else {
+        defaultFilename = selectedAudio === "without" ? `${safeTitle || 'video'}_no_sound.mp4` : `${safeTitle || 'video'}.mp4`;
+      }
       const filename = match ? match[1] : defaultFilename;
 
       const objectUrl = URL.createObjectURL(blob);
@@ -463,7 +994,10 @@ document.addEventListener("DOMContentLoaded", () => {
       a.remove();
       URL.revokeObjectURL(objectUrl);
 
-      if (selectedFormat === "mp3") {
+      if (selectedFormat === "edit") {
+        setStatus(`Cleaned reel saved successfully as "${filename}"! Check your downloads.`, "success");
+        showToast("Watermark removed & clean reel downloaded!");
+      } else if (selectedFormat === "mp3") {
         setStatus(`Download complete! Saved as MP3 audio "${filename}". Check your browser downloads.`, "success");
         showToast("MP3 Download completed successfully!");
       } else {
@@ -525,11 +1059,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     historySection.classList.remove("hidden");
     historyList.innerHTML = list.map(item => {
-      const isMp3 = item.format === "mp3";
-      const formatBadge = isMp3
-        ? `<span class="history-format-tag mp3-tag">🎵 MP3 (${item.audioQuality || "320"}k)</span>`
-        : `<span class="history-format-tag mp4-tag">🎬 ${(item.quality || "Original").toUpperCase()}</span>`;
-      const audioBadge = !isMp3 && item.audio === "without" ? `<span>• 🔇 Muted</span>` : "";
+      let formatBadge = "";
+      if (item.format === "edit") {
+        formatBadge = `<span class="history-format-tag edit-tag">✂️ CLEAN REEL</span>`;
+      } else if (item.format === "mp3") {
+        formatBadge = `<span class="history-format-tag mp3-tag">🎵 MP3 (${item.audioQuality || "320"}k)</span>`;
+      } else {
+        formatBadge = `<span class="history-format-tag mp4-tag">🎬 ${(item.quality || "Original").toUpperCase()}</span>`;
+      }
+
+      const audioBadge = item.format === "mp4" && item.audio === "without" ? `<span>• 🔇 Muted</span>` : "";
 
       return `
         <div class="history-item">
@@ -570,6 +1109,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast("Download history cleared");
   });
 
-  // Initial render of history
+  // Initial render of history & preview
   renderHistory();
+  updateEditorPreview();
 });

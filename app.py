@@ -84,7 +84,6 @@ def info():
 
             h = item.get("height")
             w = item.get("width")
-            # For portrait/reels, the standard resolution identifier is min(h, w)
             effective_res = min(h, w) if (h and w) else (h or w)
             if not effective_res:
                 continue
@@ -140,12 +139,39 @@ def find_ffmpeg():
     return ffmpeg_exe
 
 
+def get_video_dimensions(file_path, ffmpeg_exe):
+    """Probes exact video resolution (width, height) using FFmpeg stream metadata."""
+    try:
+        res = subprocess.run([ffmpeg_exe, "-i", str(file_path)], capture_output=True, text=True)
+        match = re.search(r",\s*(\d{2,5})x(\d{2,5})", res.stderr)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+    except Exception:
+        pass
+    return 1080, 1920
+
+
+def get_font_file():
+    """Locates a universal system font for FFmpeg drawtext."""
+    candidates = [
+        Path(r"C:\Windows\Fonts\arial.ttf"),
+        Path(r"C:\Windows\Fonts\calibri.ttf"),
+        Path(r"C:\Windows\Fonts\segoeui.ttf"),
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+        Path("/System/Library/Fonts/Helvetica.ttc")
+    ]
+    for c in candidates:
+        if c.exists():
+            return str(c).replace("\\", "/")
+    return None
+
+
 @app.post("/api/download")
 def download():
     data = request.get_json(silent=True) or {}
 
     url = str(data.get("url", "")).strip()
-    media_format = str(data.get("format", "mp4")).lower()  # "mp4" or "mp3"
+    media_format = str(data.get("format", "mp4")).lower()  # "mp4", "mp3", or "edit"
     quality = str(data.get("quality", "best")).lower()
     audio = str(data.get("audio", "with")).lower()
     audio_quality = str(data.get("audio_quality", "320")).lower()  # "320", "256", "192", "128"
@@ -161,6 +187,198 @@ def download():
     # Clean title for safe and readable file naming
     clean_title = re.sub(r'[\\/*?:"<>|]', "", raw_title).strip()
     clean_title = re.sub(r"\s+", " ", clean_title)[:80]
+
+    # =========================================================
+    # REEL STUDIO / WATERMARK & TEXT EDIT WORKFLOW
+    # =========================================================
+    if media_format in ("edit", "clean"):
+        if not ffmpeg_exe:
+            return jsonify(error="FFmpeg is required for watermark removal and reel editing. Please install FFmpeg or run: pip install imageio-ffmpeg"), 500
+
+        # Parse logo removal options
+        logo_enabled = bool(data.get("logo_enabled", True))
+        logo_x_pct = float(data.get("logo_x_pct", 76))
+        logo_y_pct = float(data.get("logo_y_pct", 5))
+        logo_w_pct = float(data.get("logo_w_pct", 20))
+        logo_h_pct = float(data.get("logo_h_pct", 10))
+        logo_method = str(data.get("logo_method", "delogo")).lower()
+
+        # Parse text removal / replace options (default: compact tight box)
+        text_enabled = bool(data.get("text_enabled", False))
+        text_x_pct = float(data.get("text_x_pct", 36))
+        text_y_pct = float(data.get("text_y_pct", 48))
+        text_w_pct = float(data.get("text_w_pct", 28))
+        text_h_pct = float(data.get("text_h_pct", 6))
+        text_method = str(data.get("text_method", "delogo")).lower()
+        text_action = str(data.get("text_action", "erase")).lower()  # "erase" or "replace"
+        new_text = str(data.get("new_text", "")).strip()
+        text_color = str(data.get("text_color", "white")).lower()
+        text_size = int(data.get("text_size", 34))
+
+        output = str(DOWNLOADS / f"{job}.%(ext)s")
+        selector = "bestvideo+bestaudio/best"
+
+        cmd = [
+            sys.executable, "-m", "yt_dlp",
+            "--no-warnings",
+            "--no-playlist",
+            "--restrict-filenames",
+            "--ffmpeg-location", ffmpeg_exe,
+            "-f", selector,
+            "--merge-output-format", "mp4",
+            "-o", output,
+            url
+        ]
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if result.returncode != 0:
+                raw_err = (result.stderr or "").strip()
+                if "login" in raw_err.lower() or "private" in raw_err.lower():
+                    msg = "This video is private or restricted. Only public videos can be edited."
+                else:
+                    msg = "Failed to download reel for editing. Please verify the URL."
+                return jsonify(error=msg), 422
+
+            candidates = [
+                p for p in DOWNLOADS.glob(f"{job}.*")
+                if p.is_file() and p.suffix not in (".part", ".ytdl")
+            ]
+            if not candidates:
+                return jsonify(error="Downloaded video file was not found."), 500
+
+            source_file = max(candidates, key=lambda p: p.stat().st_size)
+            vid_w, vid_h = get_video_dimensions(source_file, ffmpeg_exe)
+
+            # Build multi-stage filter pipeline with filter_complex
+            fc_steps = []
+            curr_tag = "0:v"
+            step_idx = 0
+
+            # 1. Logo / Watermark Filter Step
+            if logo_enabled:
+                lx = int(vid_w * (logo_x_pct / 100.0))
+                ly = int(vid_h * (logo_y_pct / 100.0))
+                lw = int(vid_w * (logo_w_pct / 100.0))
+                lh = int(vid_h * (logo_h_pct / 100.0))
+
+                # Clamping for safe processing
+                lx = max(2, min(lx, vid_w - 6))
+                ly = max(2, min(ly, vid_h - 6))
+                lw = max(4, min(lw, vid_w - lx - 2))
+                lh = max(4, min(lh, vid_h - ly - 2))
+
+                step_idx += 1
+                next_tag = f"v{step_idx}"
+
+                if logo_method == "blur":
+                    # Soft frosted blur (prevents horizontal smearing)
+                    fc_steps.append(
+                        f"[{curr_tag}]split[base{step_idx}][crop{step_idx}];"
+                        f"[crop{step_idx}]crop={lw}:{lh}:{lx}:{ly},boxblur=12:3[bl{step_idx}];"
+                        f"[base{step_idx}][bl{step_idx}]overlay={lx}:{ly}[{next_tag}]"
+                    )
+                elif logo_method == "mask":
+                    # Dark clean cover box
+                    fc_steps.append(f"[{curr_tag}]drawbox=x={lx}:y={ly}:w={lw}:h={lh}:color=black@0.9:t=fill[{next_tag}]")
+                else:
+                    # Smart delogo inpaint
+                    fc_steps.append(f"[{curr_tag}]delogo=x={lx}:y={ly}:w={lw}:h={lh}[{next_tag}]")
+
+                curr_tag = next_tag
+
+            # 2. Text Removal / Replacement Filter Step
+            if text_enabled:
+                tx = int(vid_w * (text_x_pct / 100.0))
+                ty = int(vid_h * (text_y_pct / 100.0))
+                tw = int(vid_w * (text_w_pct / 100.0))
+                th = int(vid_h * (text_h_pct / 100.0))
+
+                tx = max(2, min(tx, vid_w - 6))
+                ty = max(2, min(ty, vid_h - 6))
+                tw = max(4, min(tw, vid_w - tx - 2))
+                th = max(4, min(th, vid_h - ty - 2))
+
+                step_idx += 1
+                next_tag = f"v{step_idx}"
+
+                if text_method == "blur":
+                    # Soft frosted blur over text area
+                    fc_steps.append(
+                        f"[{curr_tag}]split[base{step_idx}][crop{step_idx}];"
+                        f"[crop{step_idx}]crop={tw}:{th}:{tx}:{ty},boxblur=12:3[bl{step_idx}];"
+                        f"[base{step_idx}][bl{step_idx}]overlay={tx}:{ty}[{next_tag}]"
+                    )
+                elif text_method == "mask":
+                    fc_steps.append(f"[{curr_tag}]drawbox=x={tx}:y={ty}:w={tw}:h={th}:color=black@0.9:t=fill[{next_tag}]")
+                else:
+                    # Delogo inpainting (when box is tight around text, inpainting is seamless)
+                    fc_steps.append(f"[{curr_tag}]delogo=x={tx}:y={ty}:w={tw}:h={th}[{next_tag}]")
+
+                curr_tag = next_tag
+
+                # Overlay replacement custom text if specified
+                if text_action == "replace" and new_text:
+                    step_idx += 1
+                    next_tag = f"v{step_idx}"
+                    safe_text = new_text.replace("'", "").replace(":", "\\:").replace("\\", "")
+                    font_path = get_font_file()
+                    font_opt = f":fontfile='{font_path}'" if font_path else ""
+                    scaled_size = max(16, int(text_size * (vid_w / 1080.0)))
+                    text_y_pos = ty + (th // 2) - (scaled_size // 2)
+                    fc_steps.append(
+                        f"[{curr_tag}]drawtext=text='{safe_text}'{font_opt}:fontcolor={text_color}:fontsize={scaled_size}:x=(w-text_w)/2:y={text_y_pos}[{next_tag}]"
+                    )
+                    curr_tag = next_tag
+
+            cleaned_path = DOWNLOADS / f"{job}_cleaned.mp4"
+            ffmpeg_cmd = [
+                ffmpeg_exe,
+                "-y",
+                "-i", str(source_file),
+            ]
+
+            if fc_steps:
+                filter_complex_str = ";".join(fc_steps)
+                ffmpeg_cmd.extend([
+                    "-filter_complex", filter_complex_str,
+                    "-map", f"[{curr_tag}]",
+                    "-map", "0:a?"
+                ])
+
+            ffmpeg_cmd.extend([
+                "-c:v", "libx264",
+                "-preset", "fast",
+                "-crf", "19",
+                "-c:a", "copy",
+                "-movflags", "+faststart",
+                str(cleaned_path)
+            ])
+
+            conv_res = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=300)
+
+            # Cleanup source download to save disk space
+            try:
+                source_file.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+            if conv_res.returncode != 0 or not cleaned_path.exists() or cleaned_path.stat().st_size == 0:
+                raw_err = (conv_res.stderr or "").strip()
+                return jsonify(error="Editing filters could not be applied. Try adjusting coordinates."), 500
+
+            download_name = f"{clean_title}_clean.mp4" if clean_title else "reel_clean.mp4"
+            return send_file(
+                cleaned_path,
+                as_attachment=True,
+                download_name=download_name,
+                mimetype="video/mp4"
+            )
+
+        except subprocess.TimeoutExpired:
+            return jsonify(error="Reel editing timed out. Try a shorter video."), 504
+        except Exception as exc:
+            return jsonify(error=f"Reel editing failed: {exc}"), 500
 
     # =========================================================
     # MP3 AUDIO DOWNLOAD WORKFLOW
@@ -191,7 +409,6 @@ def download():
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
-            # Check if yt-dlp created the mp3
             mp3_candidates = [
                 p for p in DOWNLOADS.glob(f"{job}*.mp3")
                 if p.is_file() and p.stat().st_size > 0
@@ -201,7 +418,6 @@ def download():
             if mp3_candidates:
                 file_path = max(mp3_candidates, key=lambda p: p.stat().st_size)
             else:
-                # If not converted yet, find any downloaded file for this job
                 all_candidates = [
                     p for p in DOWNLOADS.glob(f"{job}.*")
                     if p.is_file() and p.suffix not in (".part", ".ytdl")
@@ -217,7 +433,6 @@ def download():
 
                 source_audio = max(all_candidates, key=lambda p: p.stat().st_size)
 
-                # Convert to MP3 using ffmpeg
                 if ffmpeg_exe:
                     converted_mp3 = DOWNLOADS / f"{job}_converted.mp3"
                     ffmpeg_cmd = [
@@ -266,7 +481,6 @@ def download():
     # =========================================================
     upscale_to_2k = quality in ("1440", "2k")
 
-    # Resilient format selectors that support both horizontal videos and vertical reels
     if with_sound:
         if quality == "720":
             selector = (
@@ -287,7 +501,6 @@ def download():
             selector = "bestvideo+bestaudio/best"
         fallback_selector = "bestvideo+bestaudio/best"
     else:
-        # Video without sound / muted stream
         if quality == "720":
             selector = (
                 "bestvideo[height<=720]/bestvideo[width<=720]/"
@@ -330,7 +543,6 @@ def download():
             cmd, capture_output=True, text=True, timeout=300
         )
 
-        # Automatic fallback retry if a strict selector wasn't available
         if result.returncode != 0 and selector != fallback_selector:
             fallback_cmd = [
                 sys.executable, "-m", "yt_dlp",
@@ -373,11 +585,8 @@ def download():
         file_path = max(candidates, key=lambda path: path.stat().st_size)
 
         if upscale_to_2k:
-            # If FFmpeg is available, perform Lanczos 2K scaling
             if ffmpeg_exe:
                 upscaled_path = DOWNLOADS / f"{job}_2k.mp4"
-
-                # Landscape: 2560x1440, Portrait/Reels: 1440x2560
                 scale_filter = (
                     "scale="
                     "if(gte(iw,ih),2560,-2):"
@@ -414,7 +623,6 @@ def download():
                 except Exception:
                     pass
         elif not with_sound:
-            # User requested video WITHOUT sound: cleanly strip audio track using FFmpeg stream copy
             if ffmpeg_exe:
                 muted_path = DOWNLOADS / f"{job}_muted{file_path.suffix}"
                 ffmpeg_cmd = [
